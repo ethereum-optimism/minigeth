@@ -24,7 +24,6 @@ import (
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
@@ -111,16 +110,6 @@ func New(root common.Hash, db *Database) (*Trie, error) {
 		trie.root = rootnode
 	}
 	return trie, nil
-}
-
-// newWithRootNode initializes the trie with the given root node.
-// It's only used by range prover.
-func newWithRootNode(root node) *Trie {
-	return &Trie{
-		root: root,
-		//tracer: newTracer(),
-		db: NewDatabase(rawdb.NewMemoryDatabase()),
-	}
 }
 
 // NodeIterator returns an iterator that returns nodes of the trie. Iteration starts at
@@ -491,16 +480,18 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 		}
 		if pos >= 0 {
 			if pos != 16 {
+				//fmt.Println("delete fails here", pos, n.Children, prefix, n.Children[pos])
 				// If the remaining entry is a short node, it replaces
 				// n and its key gets the missing nibble tacked to the
 				// front. This avoids creating an invalid
 				// shortNode{..., shortNode{...}}.  Since the entry
 				// might not be loaded yet, resolve it just for this
 				// check.
-				cnode, err := t.resolve(n.Children[pos], prefix)
-				if err != nil {
-					return false, nil, err
-				}
+
+				// When node is not resolved in next block's absence proof,
+				// it must be an extension node if the state transition is
+				// valid, so we ignore the error here.
+				cnode, _ := t.resolve(n.Children[pos], prefix)
 				if cnode, ok := cnode.(*shortNode); ok {
 					// Replace the entire full node with the short node.
 					// Mark the original short node as deleted since the
@@ -525,6 +516,7 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 		return false, nil, nil
 
 	case hashNode:
+		fmt.Println("delete hashNode", prefix, key)
 		// We've hit a part of the trie that isn't loaded yet. Load
 		// the node and delete from it. This leaves all child nodes on
 		// the path to the value in the trie.
