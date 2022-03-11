@@ -26,7 +26,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/ethereum/go-ethereum/oracle"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 var emptyCodeHash = crypto.Keccak256(nil)
@@ -247,6 +249,7 @@ func (s *stateObject) GetCommittedState(db Database, key common.Hash) common.Has
 		if metrics.EnabledExpensive {
 			meter = &s.db.StorageReads
 		}
+		oracle.PrefetchStorage(db.BlockNumber, s.address, key, nil)
 		if enc, err = s.getTrie(db).TryGet(key.Bytes()); err != nil {
 			s.setError(err)
 			return common.Hash{}
@@ -353,8 +356,12 @@ func (s *stateObject) updateTrie(db Database) Trie {
 
 		var v []byte
 		if (value == common.Hash{}) {
+			//fmt.Println("delete", s.address, key)
+			// Get absense proof of key in case the deletion needs the sister node.
+			oracle.PrefetchStorage(big.NewInt(db.BlockNumber.Int64()+1), s.address, key, trie.GenPossibleShortNodePreimage)
 			s.setError(tr.TryDelete(key[:]))
 		} else {
+			//fmt.Println("update", s.address, key, value)
 			// Encoding []byte cannot fail, ok to ignore the error.
 			v, _ = rlp.EncodeToBytes(common.TrimLeftZeroes(value[:]))
 			s.setError(tr.TryUpdate(key[:], v))
