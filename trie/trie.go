@@ -435,16 +435,18 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 		}
 		if pos >= 0 {
 			if pos != 16 {
+				//fmt.Println("delete fails here", pos, n.Children, prefix, n.Children[pos])
 				// If the remaining entry is a short node, it replaces
 				// n and its key gets the missing nibble tacked to the
 				// front. This avoids creating an invalid
 				// shortNode{..., shortNode{...}}.  Since the entry
 				// might not be loaded yet, resolve it just for this
 				// check.
-				cnode, err := t.resolve(n.Children[pos], prefix)
-				if err != nil {
-					return false, nil, err
-				}
+
+				// When node is not resolved in next block's absence proof,
+				// it must be an extension node if the state transition is
+				// valid, so we ignore the error here.
+				cnode, _ := t.resolve(n.Children[pos], prefix)
 				if cnode, ok := cnode.(*shortNode); ok {
 					k := append([]byte{byte(pos)}, cnode.Key...)
 					return true, &shortNode{k, cnode.Val, t.newFlag()}, nil
@@ -464,6 +466,7 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 		return false, nil, nil
 
 	case hashNode:
+		fmt.Println("delete hashNode", prefix, key)
 		// We've hit a part of the trie that isn't loaded yet. Load
 		// the node and delete from it. This leaves all child nodes on
 		// the path to the value in the trie.
