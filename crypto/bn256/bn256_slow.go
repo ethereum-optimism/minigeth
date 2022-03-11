@@ -2,9 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-//go:build !amd64 && !arm64
-// +build !amd64,!arm64
-
 // Package bn256 implements the Optimal Ate pairing over a 256-bit Barreto-Naehrig curve.
 package bn256
 
