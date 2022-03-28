@@ -17,7 +17,6 @@
 package rpc
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -35,27 +34,6 @@ type API struct {
 	Service       interface{} // receiver instance which holds the methods
 	Public        bool        // indication if the methods must be considered safe for public use
 	Authenticated bool        // whether the api should only be available behind authentication.
-}
-
-// ServerCodec implements reading, parsing and writing RPC messages for the server side of
-// a RPC session. Implementations must be go-routine safe since the codec can be called in
-// multiple go-routines concurrently.
-type ServerCodec interface {
-	peerInfo() PeerInfo
-	readBatch() (msgs []*jsonrpcMessage, isBatch bool, err error)
-	close()
-
-	jsonWriter
-}
-
-// jsonWriter can write JSON messages to its underlying connection.
-// Implementations must be safe for concurrent use.
-type jsonWriter interface {
-	writeJSON(context.Context, interface{}) error
-	// Closed returns a channel which is closed when the connection is closed.
-	closed() <-chan interface{}
-	// RemoteAddr returns the peer address of the connection.
-	remoteAddr() string
 }
 
 type BlockNumber int64
