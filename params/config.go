@@ -477,6 +477,13 @@ func (c *ChainConfig) IsArrowGlacier(num *big.Int) bool {
 	return isForked(c.ArrowGlacierBlock, num)
 }
 
+// IsMerge returns whether num is either equal to the Merge (EIP-3675) fork block or greater.
+// This does NOT indicate whether we've already switched to proof-of-stake!
+// TODO: remove
+func (c *ChainConfig) IsMerge(num *big.Int) bool {
+	return isForked(c.MergeForkBlock, num)
+}
+
 // IsTerminalPoWBlock returns whether the given block is the last block of PoW stage.
 func (c *ChainConfig) IsTerminalPoWBlock(parentTotalDiff *big.Int, totalDiff *big.Int) bool {
 	if c.TerminalTotalDifficulty == nil {
