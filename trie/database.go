@@ -64,7 +64,6 @@ func (db *Database) Node(hash common.Hash) ([]byte, error) {
 // node retrieves a cached trie node from memory, or returns nil if none can be
 // found in the memory cache.
 func (db *Database) node(hash common.Hash) node {
-	//fmt.Println("node", hash)
 	if val := oracle.Preimage(hash); val != nil {
 		return mustDecodeNode(hash[:], val)
 	}
