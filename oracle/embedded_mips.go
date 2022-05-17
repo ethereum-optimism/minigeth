@@ -61,6 +61,18 @@ func Preimage(hash common.Hash) []byte {
 		// ready
 		rawSize := common.CopyBytes(byteAt(0x31000000, 4))
 		size := (int(rawSize[0]) << 24) | (int(rawSize[1]) << 16) | (int(rawSize[2]) << 8) | int(rawSize[3])
+
+		// The preimage was recorded but is empty. This should mean the hash represents a full node
+		// to be moved as part of a key deletion, when collapsing another full node which has only
+		// one child left (the full node represent by the hash) due to the deletion.
+		// In this case we return nil — the hash resolution call from the full node collapse case
+		// will ignore the error and assume the node is a full node.
+		// See fetching-preimages.md for more details.
+		if size == 0 {
+			preimages[hash] = nil
+			return nil
+		}
+
 		ret := common.CopyBytes(byteAt(0x31000004, size))
 
 		// this is 20% of the exec instructions, this speedup is always an option
