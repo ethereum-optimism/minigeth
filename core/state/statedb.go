@@ -314,7 +314,8 @@ func (s *StateDB) GetStorageProof(a common.Address, key common.Hash) ([][]byte, 
 	}
 	err := trie.Prove(crypto.Keccak256(key.Bytes()), 0, &proof)
 	return proof, err
-}*/
+}
+*/
 
 // GetCommittedState retrieves a value from the given account's committed storage trie.
 func (s *StateDB) GetCommittedState(addr common.Address, hash common.Hash) common.Hash {
