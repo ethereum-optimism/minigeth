@@ -480,7 +480,6 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 		}
 		if pos >= 0 {
 			if pos != 16 {
-				//fmt.Println("delete fails here", pos, n.Children, prefix, n.Children[pos])
 				// If the remaining entry is a short node, it replaces
 				// n and its key gets the missing nibble tacked to the
 				// front. This avoids creating an invalid
@@ -488,9 +487,9 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 				// might not be loaded yet, resolve it just for this
 				// check.
 
-				// When node is not resolved in next block's absence proof,
-				// it must be an extension node if the state transition is
-				// valid, so we ignore the error here.
+				// Not checking the error here is intentional. A failing preimage resolution here
+				// indicates that the child is a full node. See fetching-preimages.md for more
+				// details.
 				cnode, _ := t.resolve(n.Children[pos], prefix)
 				if cnode, ok := cnode.(*shortNode); ok {
 					// Replace the entire full node with the short node.
@@ -516,7 +515,6 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 		return false, nil, nil
 
 	case hashNode:
-		fmt.Println("delete hashNode", prefix, key)
 		// We've hit a part of the trie that isn't loaded yet. Load
 		// the node and delete from it. This leaves all child nodes on
 		// the path to the value in the trie.
